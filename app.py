@@ -1,6 +1,7 @@
 import requests
 import chess
 import chess.pgn
+import re
 from io import StringIO
 username=input("Enter chess.com username: ")
 month=int(input("Enter month(1-12): "))
@@ -45,6 +46,8 @@ if response.status_code ==200:
                         print(f"  Variant: {variant}")
                         openingurl=chess_game.headers.get('ECOUrl','UNKNOWN')
                         opening=openingurl.split('/')[-1].replace('-',' ') if openingurl !='UNKNOWN' else 'UNKNOWN'
+                        opening = re.split(r'\s+\d', opening)[0]
+                        status['openings'][opening] = status['openings'].get(opening, 0) + 1
                         moves = list(chess_game.mainline_moves())
                         print(f"  Opening: {opening}")
                         print(f"  Moves: {len(moves)}")
@@ -54,6 +57,10 @@ if response.status_code ==200:
     print(f"Wins: {status['wins']}")
     print(f"Losses: {status['losses']}")
     print(f"Draws: {status['draws']}")
+    print("Openings played:")
+    print(f"Opening count: {len(status['openings'])}")
+    for opening, count in status['openings'].items():
+        print(f"  {opening}: {count}")
 else:
     print("Failed to retrieve data")
     print(response.status_code)
