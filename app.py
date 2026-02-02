@@ -20,14 +20,20 @@ if response.status_code ==200:
                 print(f"Game {i}:")
                 print(f"  White: {game['white']['username']}")
                 print(f"  Black: {game['black']['username']}")
-                print(f"  Result(White): {game['white']['result']}")
-                print(f"  Result(Black): {game['black']['result']}")
+                user_color = 'white' if game['white']['username'].lower() == username.lower() else 'black'
+                user_result = game[user_color]['result']
+                print(f"  Result for {username} ({user_color}): {user_result}")
                 
                 if 'pgn' in game:
                     pgn = StringIO(game['pgn'])
                     chess_game = chess.pgn.read_game(pgn)
                     if chess_game:
+                        variant=chess_game.headers.get('Variant','Standard')
+                        print(f"  Variant: {variant}")
+                        openingurl=chess_game.headers.get('ECOUrl','UNKNOWN')
+                        opening=openingurl.split('/')[-1] if openingurl !='UNKNOWN' else 'UNKNOWN'
                         moves = list(chess_game.mainline_moves())
+                        print(f"  Opening: {opening}")
                         print(f"  Moves: {len(moves)}")
                 print()    
 
