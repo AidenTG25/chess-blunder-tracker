@@ -57,8 +57,8 @@ if response.status_code ==200:
     print(f"  Wins: {status['wins']}")
     print(f"  Losses: {status['losses']}")
     print(f"  Draws: {status['draws']}")
+    print()
     print(f"  Openings played:")
-    print(f"  Opening count: {len(status['openings'])}")
     for opening, count in status['openings'].items():
         print(f"  {opening}: {count}")
 else:
