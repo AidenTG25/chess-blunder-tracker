@@ -3,6 +3,19 @@ import chess
 import chess.pgn
 import re
 from io import StringIO
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+engine_path = os.getenv("STOCKFISH")
+if engine_path:
+    engine = chess.engine.SimpleEngine.popen_uci(engine_path)
+    engine_available = True
+else:
+    print("Stockfish not found. Please download STOCKFISH and set STOCKFISH environment variable.")
+    engine_available = False
+
+
 username=input("Enter chess.com username: ")
 month=int(input("Enter month(1-12): "))
 year=int(input("Enter year: "))
@@ -53,7 +66,27 @@ if response.status_code ==200:
                         moves = list(chess_game.mainline_moves())
                         print(f"  Opening: {opening}")
                         print(f"  Moves: {len(moves)}")
-                print()    
+                        if engine_available and i ==len(games):
+                            board = chess_game.board()
+                            pre_score=None
+                            blunders = 0
+                            for move in moves:
+                                info = engine.analyse(board, chess.engine.Limit(depth=15))
+                                current_score = info["score"].white().score(mate_score=10000)
+                                board.push(move)
+                                if pre_score is not None and current_score is not None:
+                                    if user_color == 'white':
+                                        if pre_score - current_score >= 300:
+                                            blunders += 1
+                                    else:
+                                        if current_score - pre_score >= 300:
+                                            blunders += 1         
+                                pre_score = current_score                       
+                            print(f"  Blunders detected by engine: {blunders}")
+                        
+                print()
+        if engine_available:
+            engine.quit()    
     print("  Summary:")
     print(f"  Total games: {status['total_games']}")
     print(f"  Wins: {status['wins']}")
@@ -61,8 +94,10 @@ if response.status_code ==200:
     print(f"  Draws: {status['draws']}")
     print()
     print(f"  Openings played:")
-    for opening, count in status['openings'].items():
+    sorted_openings = sorted(status['openings'].items(), key=lambda x: x[1], reverse=True)
+    for opening, count in sorted_openings:
         print(f"  {opening}: {count}")
 else:
     print("Failed to retrieve data")
     print(response.status_code)
+
