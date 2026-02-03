@@ -47,6 +47,8 @@ if response.status_code ==200:
                         openingurl=chess_game.headers.get('ECOUrl','UNKNOWN')
                         opening=openingurl.split('/')[-1].replace('-',' ') if openingurl !='UNKNOWN' else 'UNKNOWN'
                         opening = re.split(r'\s+\d', opening)[0]
+                        if variant in ['Chess960','Horde','Racing Kings']:
+                            opening =variant
                         status['openings'][opening] = status['openings'].get(opening, 0) + 1
                         moves = list(chess_game.mainline_moves())
                         print(f"  Opening: {opening}")
