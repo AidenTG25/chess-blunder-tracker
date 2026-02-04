@@ -65,6 +65,7 @@ if response.status_code ==200:
                             opening =variant
                         status['openings'][opening] = status['openings'].get(opening, 0) + 1
                         moves = list(chess_game.mainline_moves())
+                        move_num = 0
                         print(f"  Opening: {opening}")
                         print(f"  Moves: {len(moves)}")
                         if engine_available and i ==len(games):
@@ -74,28 +75,34 @@ if response.status_code ==200:
                             blunder_phase={'opening': 0, 'middlegame': 0, 'endgame': 0}
                             for node in chess_game.mainline():
                                 move = node.move
-                                move_num += 0.5
+                                move_num += 1
                                 is_white_move = (move_num % 2 == 1)
-                                info = engine.analyse(board, chess.engine.Limit(depth=depth))
-                                current_score = info["score"].white().score(mate_score=10000)
-                                board.push(move)
-                                if move_num <=15:
-                                    phase = 'opening'
-                                elif move_num <=30:
-                                    phase = 'middlegame'
-                                else:
-                                    phase = 'endgame'
-                                if pre_score is not None and current_score is not None:
-                                    if user_color == 'white':
-                                        if pre_score - current_score >= 300:
-                                            blunder_phase[phase] += 1
-                                            blunders += 1
+                                is_usermove = (user_color == 'white' and is_white_move) or (user_color == 'black' and not is_white_move)
+                                
+                                if is_usermove:
+                                    info = engine.analyse(board, chess.engine.Limit(depth=depth))
+                                    current_score = info["score"].white().score(mate_score=10000)
+                                    if move_num <=30:
+                                        phase = 'opening'
+                                    elif move_num <=60:
+                                        phase = 'middlegame'
                                     else:
-                                        if current_score - pre_score >= 300:
-                                            blunder_phase[phase] += 1
-                                            blunders += 1         
-                                pre_score = current_score                       
+                                        phase = 'endgame'
+                                    if pre_score is not None and current_score is not None:
+                                        if user_color == 'white':
+                                            if pre_score - current_score >= 300:
+                                                blunder_phase[phase] += 1
+                                                blunders += 1
+                                        else:
+                                            if current_score - pre_score >= 300:
+                                                blunder_phase[phase] += 1
+                                                blunders += 1         
+                                    pre_score = current_score  
+                                board.push(move)                     
                             print(f"  Blunders detected by engine: {blunders}")
+                            print(f"  Blunders by phase:")
+                            for phase, count in blunder_phase.items():
+                                print(f"    {phase.capitalize()}: {count}")
                         
                 print()
         if engine_available:
