@@ -19,6 +19,7 @@ else:
 username=input("Enter chess.com username: ")
 month=int(input("Enter month(1-12): "))
 year=int(input("Enter year: "))
+depth=int(input("Enter engine analysis depth: "))
 url=f"https://api.chess.com/pub/player/{username}/games/{year:04d}/{month:02d}"
 headers = {
     "User-Agent": f"ChessBlunderTracker (Contact: {username})"
@@ -71,7 +72,7 @@ if response.status_code ==200:
                             pre_score=None
                             blunders = 0
                             for move in moves:
-                                info = engine.analyse(board, chess.engine.Limit(depth=15))
+                                info = engine.analyse(board, chess.engine.Limit(depth=depth))
                                 current_score = info["score"].white().score(mate_score=10000)
                                 board.push(move)
                                 if pre_score is not None and current_score is not None:
